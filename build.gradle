@@ -1,0 +1,36 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// PDF 파일 처리를 위한 Apache PDFBox 라이브러리
+	implementation 'org.apache.pdfbox:pdfbox:2.0.24'
+
+	// 한국어 형태소 분석을 위한 KOMORAN 라이브러리
+	implementation 'com.github.shin285:KOMORAN:3.3.9'
+
+	//JSON 데이터의 구조에 맞게 파싱하기 위한 라이브러리
+	implementation 'org.json:json:20231013'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

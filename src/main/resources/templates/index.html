@@ -1,0 +1,192 @@
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>단어 빈도 분석기</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Noto Sans KR', sans-serif;
+                background-color: #f8f9fa;
+            }
+            .custom-file-button input[type=file] {
+                margin-left: -2px !important;
+            }
+            .custom-file-button input[type=file]::-webkit-file-upload-button {
+                display: none;
+            }
+            .custom-file-button input[type=file]::file-selector-button {
+                display: none;
+            }
+            .custom-file-button:hover label {
+                background-color: #dde0e3;
+                cursor: pointer;
+            }
+            .small-text {
+                font-size: 0.8rem;
+                color: #6c757d;
+            }
+            .spinner-border {
+                width: 1rem;
+                height: 1rem;
+                border-width: 0.15em;
+                font-size: 0.7rem;
+            }
+            .word-container {
+                position: relative;
+                display: inline-block;
+            }
+            .word-meaning {
+                position: absolute;
+                top: 0;
+                left: 100%; /* 단어 오른쪽에 위치하도록 left: 100% 설정 */
+                transform: translateX(20px); /* 단어와 박스 사이의 간격 조절 */
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 0.9rem;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                width: 350px;
+                z-index: 1000;
+            }
+            @media (max-width: 767px) {
+                .word-meaning {
+                    width: 250px; /* 모바일 화면에서 박스 가로 크기를 250px로 설정 */
+                }
+            }
+        </style>
+    </head>
+    <body>
+    <div id="app" class="container my-5">
+        <h1 class="text-center mb-4">단어 빈도 분석기</h1>
+        <div class="row justify-content-center">
+            <p class="text-center small-text mb-4">made by 채황 for 범수</p>
+            <div class="col-md-8 col-lg-6">
+                <div class="mb-3">
+                    <label for="files" class="form-label">PDF 파일 선택</label>
+                    <div class="input-group custom-file-button">
+                        <input type="file" id="files" class="form-control" multiple @change="handleFileChange">
+                        <label class="input-group-text" for="files">파일 선택</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="count" class="form-label">출력할 단어 개수</label>
+                    <input type="number" id="count" class="form-control" v-model.number="count">
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-primary" @click="analyzeWords" :disabled="isLoading">
+                        {{ isLoading ? '분석 중...' : '분석' }}
+                    </button>
+                </div>
+                <div v-if="isLoading" class="mt-3 text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">분석 중...</span>
+                    </div>
+                </div>
+                <div v-if="wordCounts" class="mt-5">
+                    <h2 class="text-center mb-4">상위 단어</h2>
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>단어</th>
+                            <th>빈도</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(count, word) in wordCounts" :key="word">
+                            <td class="position-relative">
+                                <span class="word-container" @mouseover="showWordMeaning(word, $event)" @mouseout="hideWordMeaning">
+                                    {{ word }}
+                                    <div class="word-meaning" :ref="`wordMeaning_${word}`" v-show="currentWord === word">{{ currentWordMeaning }}</div>
+                                </span>
+                            </td>
+                            <td>{{ count }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.0/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+    <script>
+        const {createApp} = Vue;
+
+        createApp({
+            data() {
+                return {
+                    files: [],
+                    count: 30,
+                    wordCounts: null,
+                    isLoading: false,
+                    currentWord: '',
+                    currentWordMeaning: ''
+                };
+            },
+            methods: {
+                handleFileChange(event) {
+                    const files = Array.from(event.target.files);
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+
+                    const oversizedFiles = files.filter(file => file.size > maxSize);
+
+                    if (oversizedFiles.length > 0) {
+                        alert('업로드하려는 파일 중 크기가 10MB를 초과하는 파일이 있습니다. 파일 크기를 확인해주세요.');
+                        event.target.value = ''; // 파일 선택 초기화
+                    } else {
+                        this.files = files;
+                    }
+                },
+                async analyzeWords() {
+                    this.isLoading = true;
+                    const formData = new FormData();
+                    this.files.forEach(file => formData.append('files', file));
+                    formData.append('count', this.count);
+
+                    try {
+                        const response = await axios.post('/api/wordcount/analyze', formData);
+                        this.wordCounts = response.data;
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                showWordMeaning(word, event) {
+                    this.currentWord = word;
+                    this.currentWordMeaning = null; // 초기화
+
+                    axios.get(`/api/words/${word}/meaning`)
+                        .then(response => {
+                            this.currentWordMeaning = response.data;
+
+                            // 모바일 환경일 경우 이벤트 리스너 등록
+                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                            if (isMobile) {
+                                window.addEventListener('touchstart', this.handleOutsideClick);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                },
+                hideWordMeaning() {
+                    this.currentWord = '';
+                    window.removeEventListener('touchstart', this.handleOutsideClick);
+                },
+                handleOutsideClick(event) {
+                    // 모바일 환경에서 뜻 박스 외부를 터치했을 때
+                    if (event.target.closest('.word-meaning') === null) {
+                        this.hideWordMeaning();
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+    </body>
+    </html>
