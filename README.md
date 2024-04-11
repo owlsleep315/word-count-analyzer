@@ -11,7 +11,7 @@
 - 분석 중 로딩 스피너를 통해 진행 상황 표시
 - 반응형 디자인으로 모바일 환경에서도 최적화된 화면 제공
 
-# 기술 스택
+## 기술 스택
 - 프론트엔드: HTML, CSS, JavaScript, Vue.js, Bootstrap
 - 백엔드: Java, Spring Boot, Apache PDFBox, Komoran, Naver 검색 API
 - 배포: AWS Elastic Beanstalk
