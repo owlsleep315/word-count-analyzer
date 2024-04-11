@@ -1,6 +1,6 @@
 ## 단어 빈도 분석기
 
-[접속 주소](http://word-count-analyzer.ap-northeast-2.elasticbeanstalk.com/)
+[word-count-analyzer](http://word-count-analyzer.ap-northeast-2.elasticbeanstalk.com/)
 
 단어 빈도 분석기는 PDF 파일에서 단어 빈도를 분석하고 시각화하는 웹 애플리케이션입니다. 
 사용자는 PDF 파일을 업로드하면 상위 단어와 그 빈도를 확인할 수 있습니다. 
